@@ -27,12 +27,10 @@ public class GestionHopitApplication implements CommandLineRunner {
                 .score(90)
                 .build();
 
-        Patient patient2 = Patient.builder()
-                .username("Mohammed")
-                .dateOfBirth(new Date())
-                .isSick(true)
-                .score(80)
-                .build();
+        Patient patient2 = new Patient(null, "Mohammed", new Date(), true, 90);
+
+        patientRepository.save(patient1);
+        patientRepository.save(patient2);
 
     }
 }
