@@ -14,7 +14,7 @@
             <div class="card-body">
                 <form method="get" th:action="@{index}">
                     <label>Mot-clé :</label>
-                    <input type="text" name="keyword" placeholder="Recherche..." />
+                    <input type="text" name="keyword" placeholder="Recherche..." th:value="${keyword}" />
                     <button type="submit" class="btn btn-info">Chercher</button>
                 </form>
                 <table class="table">
@@ -39,7 +39,7 @@
                 </table>
                 <ul class="nav nav-pills">
                     <li th:each="value,item:${pages}">
-                        <a th:href="@{/index(page=${item.index})}"
+                        <a th:href="@{/index(page=${item.index},keyword=${keyword})}"
                            th:class="${currentPage==item.index?'btn btn-info ms-1':'btn btn-outline-info ms-1'}"
                            th:text="${item.index}"></a>
                     </li>
