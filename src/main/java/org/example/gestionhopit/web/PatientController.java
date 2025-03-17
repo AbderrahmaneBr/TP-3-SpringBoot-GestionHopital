@@ -3,9 +3,12 @@ package org.example.gestionhopit.web;
 import lombok.AllArgsConstructor;
 import org.example.gestionhopit.entities.Patient;
 import org.example.gestionhopit.repository.PatientRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -15,9 +18,13 @@ public class PatientController {
     private PatientRepository patientRepository;
 
     @GetMapping("/index")
-    public String index(Model model) {
-        List<Patient> patientsList = patientRepository.findAll();
-        model.addAttribute("patientsList", patientsList);
+    public String index(Model model, @RequestParam(name = "page", defaultValue = "0") int pageNumber, @RequestParam(name = "size", defaultValue = "10") int pageSize) {
+//        List<Patient> patientsList = patientRepository.findAll();
+        Page<Patient> patientPage = patientRepository.findAll(PageRequest.of(pageNumber, pageSize));
+        model.addAttribute("patientsList", patientPage.getContent());
+        model.addAttribute("pages", new int[patientPage.getTotalPages()]);
+        model.addAttribute("currentPage", pageNumber);
+
         return "index";
     }
 }

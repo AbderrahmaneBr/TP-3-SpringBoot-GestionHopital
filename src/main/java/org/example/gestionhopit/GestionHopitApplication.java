@@ -20,17 +20,17 @@ public class GestionHopitApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Patient patient1 = Patient.builder()
-                .username("Abderrahmane")
-                .dateOfBirth(new Date())
-                .isSick(false)
-                .score(90)
-                .build();
-
-        Patient patient2 = new Patient(null, "Mohammed", new Date(), true, 90);
-
-        patientRepository.save(patient1);
-        patientRepository.save(patient2);
+//        Patient patient1 = Patient.builder()
+//                .username("Abderrahmane")
+//                .dateOfBirth(new Date())
+//                .isSick(false)
+//                .score(90)
+//                .build();
+//
+//        Patient patient2 = new Patient(null, "Mohammed", new Date(), true, 90);
+//
+//        patientRepository.save(patient1);
+//        patientRepository.save(patient2);
 
     }
 }
