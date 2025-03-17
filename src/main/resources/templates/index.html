@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Patients</title>
     <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css" >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" >
 </head>
 <body>
     <div class="m-3">
@@ -15,7 +16,9 @@
                 <form method="get" th:action="@{index}">
                     <label>Mot-clé :</label>
                     <input type="text" name="keyword" placeholder="Recherche..." th:value="${keyword}" />
-                    <button type="submit" class="btn btn-info">Chercher</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
                 </form>
                 <table class="table">
                     <thead>
@@ -36,7 +39,9 @@
                         <td th:text="${p.isSick()}"></td>
                         <td th:text="${p.getScore()}"></td>
                         <td>
-                            <a onclick="return confirm('Êtes vous sure?')" th:href="@{/delete(id=${p.id}, keyword=${keyword}, page=${currentPage})}" class="btn btn-danger">Delete</a>
+                            <a onclick="return confirm('Êtes vous sure?')" th:href="@{/delete(id=${p.id}, keyword=${keyword}, page=${currentPage})}" class="btn btn-danger">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
                         </td>
                     </tr>
                     </tbody>
@@ -45,7 +50,7 @@
                     <li th:each="value,item:${pages}">
                         <a th:href="@{/index(page=${item.index}, keyword=${keyword})}"
                            th:class="${currentPage==item.index?'btn btn-info ms-1':'btn btn-outline-info ms-1'}"
-                           th:text="${item.index}"></a>
+                           th:text="${item.index + 1}"></a>
                     </li>
                 </ul>
             </div>
