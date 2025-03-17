@@ -43,6 +43,5 @@ public class PatientController {
                          @RequestParam(name = "keyword") String keyword) {
         patientRepository.deleteById(id);
         return "redirect:/index" + "?page=" + currentPage + "&keyword=" + keyword;
-
     }
 }
