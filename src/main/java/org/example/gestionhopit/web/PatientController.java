@@ -22,7 +22,7 @@ public class PatientController {
                         @RequestParam(name = "size", defaultValue = "10") int s,
                         @RequestParam(name = "keyword", defaultValue = "") String keyword
     ) {
-//        List<Patient> patientsList = patientRepository.findAll();
+        // List<Patient> patientsList = patientRepository.findAll();
         Page<Patient> patientPage;
         if(keyword.isEmpty()) {
             patientPage = patientRepository.findAll(PageRequest.of(p, s));
@@ -35,5 +35,14 @@ public class PatientController {
         model.addAttribute("keyword", keyword);
 
         return "index";
+    }
+
+    @GetMapping("/delete")
+    public String delete(@RequestParam(name = "id") Long id,
+                         @RequestParam(name = "page") int currentPage,
+                         @RequestParam(name = "keyword") String keyword) {
+        patientRepository.deleteById(id);
+        return "redirect:/index" + "?page=" + currentPage + "&keyword=" + keyword;
+
     }
 }

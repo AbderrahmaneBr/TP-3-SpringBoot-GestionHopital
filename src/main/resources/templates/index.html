@@ -25,6 +25,7 @@
                         <th>Date de naissance</th>
                         <th>Malade</th>
                         <th>Score</th>
+                        <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -34,12 +35,15 @@
                         <td th:text="${p.getDateOfBirth()}"></td>
                         <td th:text="${p.isSick()}"></td>
                         <td th:text="${p.getScore()}"></td>
+                        <td>
+                            <a onclick="return confirm('Êtes vous sure?')" th:href="@{/delete(id=${p.id}, keyword=${keyword}, page=${currentPage})}" class="btn btn-danger">Delete</a>
+                        </td>
                     </tr>
                     </tbody>
                 </table>
                 <ul class="nav nav-pills">
                     <li th:each="value,item:${pages}">
-                        <a th:href="@{/index(page=${item.index},keyword=${keyword})}"
+                        <a th:href="@{/index(page=${item.index}, keyword=${keyword})}"
                            th:class="${currentPage==item.index?'btn btn-info ms-1':'btn btn-outline-info ms-1'}"
                            th:text="${item.index}"></a>
                     </li>
