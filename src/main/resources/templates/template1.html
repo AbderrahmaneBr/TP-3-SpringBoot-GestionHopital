@@ -8,19 +8,34 @@
     <title>Title</title>
     <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css" >
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" >
-    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.js" />
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.js"></script>
 </head>
 <body>
-<nav class="navbar navbar-default">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
         <div class="navbar-header">
-            <a class="navbar-brand" href="#">WebSiteName</a>
+            <a class="navbar-brand" href="#">Gestion Patients</a>
         </div>
-        <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#">Page 1</a></li>
-            <li><a href="#">Page 2</a></li>
-            <li><a href="#">Page 3</a></li>
+        <ul class="nav navbar-nav flex-row gap-4 align-items-center">
+            <li class="active"><a th:href="@{/index}">Home</a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="actionsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions
+                </a>
+                <ul class="dropdown-menu position-absolute" aria-labelledby="actionsDropdown">
+                    <li><a class="dropdown-item" th:href="@{/search}">Search</a></li>
+                    <li><a class="dropdown-item" th:href="@{/create}">Create</a></li>
+                </ul>
+            </li>
+            <li><a th:href="@{/formPatients}">Formulaire</a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    [Utilisateur]
+                </a>
+                <ul class="dropdown-menu position-absolute" aria-labelledby="userDropdown">
+                    <li><a class="dropdown-item text-danger" th:href="@{/disconnect}">Disconnect</a></li>
+                </ul>
+            </li>
         </ul>
     </div>
 </nav>
