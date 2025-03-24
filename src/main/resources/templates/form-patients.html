@@ -13,24 +13,24 @@
 <body>
     <div layout:fragment="content1" class="col-md-6 offset-3">
         <form th:action="@{save}" method="post">
-            <div>
-                <label>Nom</label>
-                <input class="form-control" type="text" name="nom" th:value="${patient.username}">
+            <div class="my-3">
+                <label for="nom">Nom</label>
+                <input id="nom" class="form-control" type="text" name="username" th:value="${patient.username}">
                 <span th:errors="${patient.username}"></span>
             </div>
-            <div>
-                <label>Date Naissance</label>
-                <input class="form-control" type="date" name="dateNaissance" th:value="${patient.dateOfBirth}">
+            <div class="my-3">
+                <label for="dateNaissance">Date Naissance</label>
+                <input id="dateNaissance" class="form-control" type="date" name="dateOfBirth" th:value="${patient.dateOfBirth}">
                 <span th:errors="${patient.dateOfBirth}"></span>
             </div>
-            <div>
-                <label>Malade</label>
-                <input type="checkbox" name="malade" th:checked="${patient.isSick()}">
-                <span th:errors="${patient.isSick()}"></span>
+            <div class="my-3">
+                <label for="malade">Malade</label>
+                <input id="malade" type="checkbox" name="isSick" th:checked="${patient.isSick}">
+                <span th:errors="${patient.isSick}"></span>
             </div>
-            <div>
-                <label>Score</label>
-                <input class="form-control" type="text" name="score" th:checked="${patient.score}">
+            <div class="my-3">
+                <label for="score">Score</label>
+                <input id="score" class="form-control" type="text" name="score" th:checked="${patient.score}">
                 <span th:errors="${patient.score}"></span>
             </div>
             <button class="btn btn-primary" type="submit">Enregistrer</button>
