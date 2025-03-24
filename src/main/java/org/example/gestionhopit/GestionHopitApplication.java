@@ -23,7 +23,7 @@ public class GestionHopitApplication implements CommandLineRunner {
 //        Patient patient1 = Patient.builder()
 //                .username("Abderrahmane")
 //                .dateOfBirth(new Date())
-//                .isSick(false)
+//                .sick(false)
 //                .score(90)
 //                .build();
 //
