@@ -44,6 +44,9 @@
                         <td th:text="${p.isSick()}"></td>
                         <td th:text="${p.getScore()}"></td>
                         <td>
+                            <a th:href="@{/edit(id=${p.id}, keyword=${keyword}, page=${currentPage})}" class="btn btn-info">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
                             <a onclick="return confirm('Êtes vous sure?')" th:href="@{/delete(id=${p.id}, keyword=${keyword}, page=${currentPage})}" class="btn btn-danger">
                                 <i class="fa-solid fa-trash"></i>
                             </a>

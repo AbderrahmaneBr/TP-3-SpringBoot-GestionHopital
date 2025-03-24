@@ -23,7 +23,7 @@ public class PatientController {
 
     @GetMapping("/index")
     public String index(Model model, @RequestParam(name = "page", defaultValue = "0") int p,
-                        @RequestParam(name = "size", defaultValue = "10") int s,
+                        @RequestParam(name = "size", defaultValue = "1") int s,
                         @RequestParam(name = "keyword", defaultValue = "") String keyword
     ) {
         // List<Patient> patientsList = patientRepository.findAll();
@@ -58,12 +58,30 @@ public class PatientController {
     @PostMapping("/save")
     public String savePatient(@Valid @ModelAttribute("patient") Patient patient,
                               BindingResult bindingResult,
-                              Model model) {
+                              Model model, @RequestParam(name = "page") int currentPage,
+                              @RequestParam(name = "keyword") String keyword) {
         if (bindingResult.hasErrors()) {
             return "form-patients"; // Return the form with errors
         }
+
+        patientRepository.save(patient);
+
         // Save patient logic here
-        return "redirect:/index";
+        return "redirect:/index" + "?page=" + currentPage + "&keyword=" + keyword;
+    }
+
+    @GetMapping("/edit")
+    public String edit(Model model, @RequestParam(name = "id") Long id, @RequestParam(name = "page") int currentPage,
+                       @RequestParam(name = "keyword") String keyword) {
+        Patient patient = patientRepository.findById(id).orElse(null);
+        if(patient == null) {
+            throw new IllegalArgumentException("Patient not found");
+        }
+        model.addAttribute("patient", patient);
+        model.addAttribute("page", currentPage);
+        model.addAttribute("keyword", keyword);
+
+        return "edit-patient";
     }
 
 }
