@@ -287,3 +287,251 @@ public class Patient {
 On va être redirigé vers la page formulaire si on rencontre une erreur, sinon le patient sera créé ou modifié.
 ---
 ## Sécurité
+Pour ajouter la partie sécurité à notre application, il faut inclure les répertoires suivants :
+```xml
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+Après, il faut créer un répertoire "security" et ajouter un fichier configuration dedans :
+```java
+@Configuration
+@EnableWebSecurity
+@AllArgsConstructor
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+        http.formLogin(Customizer.withDefaults());
+        http.authorizeHttpRequests((authorize) ->
+                authorize
+                .anyRequest().authenticated()
+        );
+        return http.build();
+    }
+}
+```
+Ce filtre permet de rejeter les requêtes non authentifiées envoyées par les clients.
+
+### In Memory Authentication Strategy
+Cette stratégie consiste à créer des utilisateurs dans la mémoire volatile de notre application.
+
+Dans le fichier configuration de notre application "GestionHopitApplication.java", on ajoute la fonction d'encodage des mots de passe :
+```java
+@Bean
+PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}
+```
+```java
+private PasswordEncoder passwordEncoder;
+
+@Bean
+public InMemoryUserDetailsManager inMemoryUserDetailsManager() {
+    return new InMemoryUserDetailsManager(
+            User.withUsername("user1").password(passwordEncoder.encode("1234")).roles("USER").build(),
+            User.withUsername("user2").password(passwordEncoder.encode("1234")).roles("USER").build(),
+            User.withUsername("admin").password(passwordEncoder.encode("1234")).roles("USER", "ADMIN").build()
+    );
+}
+```
+### JDBC Authentication Strategy
+Cette stratégie permet de créer deux tables "users" et "authorities" automatiquement dans notre base de données, puis lier l'authentification à ces deux tables :
+
+Premièrement, il faut créer un fichier "schema.sql" contenant :
+```sql
+create table if not exists users(username varchar(50) not null primary key,password varchar(500) not null,enabled boolean not null);
+create table if not exists authorities (username varchar(50) not null,authority varchar(50) not null,constraint fk_authorities_users foreign key(username) references users(username));
+create unique index if not exists ix_auth_username on authorities (username,authority);
+```
+
+On modifie "application.properties" :
+```properties
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.defer-datasource-initialization=true
+spring.sql.init.mode=always
+```
+
+Puis, on ajoute la configuration sécurité :
+```java
+@Bean
+public JdbcUserDetailsManager userDetailsManager(DataSource dataSource) {
+    return new JdbcUserDetailsManager(dataSource);
+}
+```
+
+Pour tester, il faut créer des utilisateurs :
+```java
+@Bean
+CommandLineRunner commandLineRunner(JdbcUserDetailsManager jdbcUserDetailsManager) {
+    return args -> {
+        jdbcUserDetailsManager.createUser(User.withUsername("user11").password(passwordEncoder().encode("1234")).roles("USER").build());
+        jdbcUserDetailsManager.createUser(User.withUsername("user22").password(passwordEncoder().encode("1234")).roles("USER").build());
+        jdbcUserDetailsManager.createUser(User.withUsername("admin2").password(passwordEncoder().encode("1234")).roles("USER", "ADMIN").build());
+    };
+}
+```
+### User Details Strategy
+Cette stratégie consiste à créer un système d'authentification personnalisé, en donnant au développeur le contrôle totale :
+
+Dans le répertoire security, on ajoute un répertoire "entities". Ce répertoire contient deux entités :
+
+**AppRole:**
+```java
+@Entity
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class AppRole {
+    @Id
+    private String role;
+}
+```
+
+**AppUser:**
+```java
+@Entity
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class AppUser {
+    @Id
+    private String id;
+    @Column(unique = true)
+    private String username;
+    private String password;
+    private String email;
+    @ManyToMany(fetch = FetchType.EAGER)
+    private List<AppRole> roles;
+}
+```
+
+On ajoute un autre répertoire "repo" qui joue le rôle du DAO. Ce répertoire contient :
+
+**AppRoleRepository:**
+```java
+public interface AppRoleRepository extends JpaRepository<AppRole, String> {}
+```
+
+**AppUserRepository:**
+```java
+public interface AppUserRepository extends JpaRepository<AppUser, Long> {
+    AppUser findByUsername(String username);
+}
+```
+
+On ajoute un autre répertoire "service" :
+
+**AccountService:**
+```java
+public interface AccountService {
+    AppUser addUser(String username, String password, String email, String confirmPassword);
+    AppRole addRole(String roleName);
+    void addRoleToUser(String username, String roleName);
+    void removeRoleFromUser(String username, String roleName);
+    AppUser loadUserByUsername(String username);
+}
+```
+
+**AccountServiceImpl:**
+```java
+@Service
+@AllArgsConstructor
+public class AccountServiceImpl implements AccountService {
+    private final PasswordEncoder passwordEncoder;
+    private AppUserRepository appUserRepository;
+    private AppRoleRepository appRoleRepository;
+
+    @Override
+    public AppUser addUser(String username, String password, String email, String confirmPassword) {
+       AppUser user = appUserRepository.findByUsername(username);
+       if(user!=null) throw new RuntimeException("User already exists");
+       if(!password.equals(confirmPassword)) throw new RuntimeException("Passwords do not match");
+       AppUser newUser = AppUser.builder()
+               .id(UUID.randomUUID().toString())
+               .username(username)
+               .password(passwordEncoder.encode(password))
+               .email(email)
+               .build();
+
+        return appUserRepository.save(newUser);
+    }
+
+    @Override
+    public AppRole addRole(String roleName) {
+        AppRole appRole = appRoleRepository.findById(roleName).orElse(null);
+        if(appRole!=null) throw new RuntimeException("Role already exists");
+        appRole = AppRole.builder()
+                .role(roleName)
+                .build();
+        return appRoleRepository.save(appRole);
+    }
+
+    @Override
+    public void addRoleToUser(String username, String roleName) {
+        AppUser user = appUserRepository.findByUsername(username);
+        AppRole role = appRoleRepository.findById(roleName).orElse(null);
+        if(user==null) throw new RuntimeException("User does not exist");
+        if(role==null) throw new RuntimeException("Role does not exist");
+        user.getRoles().add(role);
+        //appUserRepository.save(user);
+    }
+
+    @Override
+    public void removeRoleFromUser(String username, String roleName) {
+        AppUser user = appUserRepository.findByUsername(username);
+        AppRole role = appRoleRepository.findById(roleName).orElse(null);
+        if(user==null) throw new RuntimeException("User does not exist");
+        if(role==null) throw new RuntimeException("Role does not exist");
+        user.getRoles().remove(role);
+    }
+
+    @Override
+    public AppUser loadUserByUsername(String username) {
+        AppUser user = appUserRepository.findByUsername(username);
+        if(user==null) throw new RuntimeException("User does not exist");
+        return user;
+    }
+}
+```
+
+**UserDetailsServiceImpl:**
+```java
+Service
+@AllArgsConstructor
+public class UserDetailsServiceImpl implements UserDetailsService {
+    private AccountService accountService;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        AppUser user  = accountService.loadUserByUsername(username);
+        if(user == null) {throw new UsernameNotFoundException(username);}
+        String[] roles = user.getRoles().stream().map(u->u.getRole()).toArray(String[]::new);
+        UserDetails userDetails = User.withUsername(user.getUsername()).password(user.getPassword()).roles(roles).build();
+        return userDetails;
+    }
+}
+```
+
+Finalement, il faut ajouter cette ligne dans les filtres de la configuration securité :
+```java
+http.userDetailsService(userDetailsServiceImpl);
+```
+```java
+private UserDetailsServiceImpl userDetailsServiceImpl;
+
+@Bean
+public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+    http.formLogin(Customizer.withDefaults());
+    http.authorizeHttpRequests((authorize) ->
+            authorize
+            .anyRequest().authenticated()
+    );
+    http.userDetailsService(userDetailsServiceImpl);
+    return http.build();
+}
+```
+
+Cette ligne demande à spring de valider les utilisateurs en utilisant les informations dans les tables "AppRole" et "AppUser".
