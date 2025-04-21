@@ -194,3 +194,96 @@ Pour la recherche, on a utilisé un formulaire qui permet d'envoyer le keyword e
 ```
 Pour la pagination, on a bouclé sur les différents pages retournés par le controlleur puis on a incrémenté par 1 pour l'affichage, on a ajouté aussi un lien pour chaque élément pour diriger l'utilisateur vers la page qu'il désire, pour améliorer l'expérience utilisateur, la page qui se comforme avec la page actuelle a une couleur différente.
 
+---
+# Validation des formulaires
+Pour ajouter une validation pour les formulaires, il faut tout d'abord intégrer le package:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+    <version>2.6.5</version>
+</dependency>
+```
+Après on doit créer notre formulaire, on ajoute une nouvelle page template "form-patients.html" avec les mêmes liens xml utilisés pour les pages prècedents :
+```html
+<div layout:fragment="content1" class="col-md-6 offset-3">
+    <form th:action="@{save}" method="post">
+        <div class="my-3">
+            <label for="nom">Nom</label>
+            <input id="nom" class="form-control" type="text" name="username" th:value="${patient.username}">
+            <span th:errors="${patient.username}" class="text-danger"></span>
+        </div>
+        <div class="my-3">
+            <label for="dateNaissance">Date Naissance</label>
+            <input id="dateNaissance" class="form-control" type="date" name="dateOfBirth" th:value="${patient.dateOfBirth}">
+            <span th:errors="${patient.dateOfBirth}" class="text-danger"></span>
+        </div>
+        <div class="my-3">
+            <label for="malade">Malade</label>
+            <input id="malade" type="checkbox" name="sick" th:checked="${patient.sick}">
+            <span th:errors="${patient.sick}" class="text-danger"></span>
+        </div>
+        <div class="my-3">
+            <label for="score">Score</label>
+            <input id="score" class="form-control" type="text" name="score" th:value="${patient.score}">
+            <span th:errors="${patient.score}" class="text-danger"></span>
+        </div>
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+    </form>
+</div>
+```
+On remarque qu'on a ajouté cette ligne :
+```html
+<span th:errors="${patient.username}" class="text-danger"></span>
+```
+Cette ligne permet de chercher les messages d'erreur s'il existe, puis les rendres dans html.
+Mais pour que ça fonctionne, il faut configurer les contrôleurs comme ceci, il faut ajouter un contrôleur qui retourne la page "form-patients.html" :
+```java
+@GetMapping("/formPatients")
+public String formPatients(Model model) {
+    model.addAttribute("patient", new Patient());
+    return "form-patients";
+}
+```
+Ce contrôleur permet de rendre le formulaire, rempli dans le cas où un patient est spécifié, vide sinon.
+Maintenant, il faut ajouter le contrôleur pour sauvegarder les données d'un patient modifié / ajouter un nouvel patient :
+```java
+@PostMapping("/save")
+public String savePatient(@Valid @ModelAttribute("patient") Patient patient,
+                          BindingResult bindingResult,
+                          Model model, @RequestParam(name = "page") int currentPage,
+                          @RequestParam(name = "keyword") String keyword) {
+    if (bindingResult.hasErrors()) {
+        return "form-patients"; // Return the form with errors
+    }
+
+    patientRepository.save(patient);
+
+    // Save patient logic here
+    return "redirect:/index" + "?page=" + currentPage + "&keyword=" + keyword;
+}
+```
+Pour le BindingResult, il vérifie si les champs entrés se correspondent avec les définitions faites dans le modèle :
+```java
+@Entity
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class Patient {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @NotEmpty
+    @Size(min = 4, max = 50)
+    private String username;
+    @Temporal(TemporalType.DATE)
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private Date dateOfBirth;
+    private boolean sick;
+    @DecimalMin("100")
+    private int score;
+}
+```
+- **@NotEmpty**
+- **@Size(min = 4, max = 50)**
+- **@DecimalMin("100")**
+On va être redirigé vers la page formulaire si on rencontre une erreur, sinon le patient sera créé ou modifié.
+---
+## Sécurité
